@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import Link from 'next/link';
+import { signIn } from 'next-auth/react';
 
 export function LandingHero() {
   return (
@@ -14,11 +14,13 @@ export function LandingHero() {
           Manage GitHub issues with AI-powered triage, kanban boards, and collaborative workflows. Built for developers, by developers.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link href="/dashboard">
-            <Button size="lg" className="w-full sm:w-auto">
-              Sign in with GitHub
-            </Button>
-          </Link>
+          <Button
+            size="lg"
+            className="w-full sm:w-auto"
+            onClick={() => signIn('github', { callbackUrl: '/dashboard' })}
+          >
+            Sign in with GitHub
+          </Button>
           <Button size="lg" variant="outline" className="w-full sm:w-auto">
             View Documentation
           </Button>

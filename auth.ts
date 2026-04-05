@@ -4,6 +4,7 @@ import { connectToDatabase } from '@/lib/mongodb';
 import User from '@/lib/models/User';
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  trustHost: true,
   providers: [
     GitHub({
       clientId: process.env.GITHUB_CLIENT_ID!,
@@ -31,6 +32,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
     async session({ session, token }) {
       if (token.sub) {
+        await connectToDatabase();
         const user = await User.findOne({ githubId: token.sub });
         session.user.id = user?._id.toString();
       }
@@ -44,5 +46,5 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
   },
   session: { strategy: 'jwt' },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.AUTH_SECRET,
 });

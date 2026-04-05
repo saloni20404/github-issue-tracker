@@ -1,9 +1,9 @@
-import NextAuthOptions from 'next-auth'
+import { NextAuthOptions } from 'next-auth'
 import GithubProvider from 'next-auth/providers/github'
 import { connectToDatabase } from '@/lib/mongodb'
 import User from '@/lib/models/User'
 
-export const authOptions = {
+export const authOptions: NextAuthOptions = {
   providers: [
     GithubProvider({
       clientId: process.env.GITHUB_CLIENT_ID!,
@@ -12,7 +12,7 @@ export const authOptions = {
     }),
   ],
   callbacks: {
-    async signIn({ user, account }: any) {
+    async signIn({ user, account }) {
       try {
         if (account?.provider === 'github') {
           await connectToDatabase()
@@ -33,19 +33,19 @@ export const authOptions = {
         return true
       }
     },
-    async session({ session, token }: any) {
+    async session({ session, token }) {
       try {
         await connectToDatabase()
         const user = await User.findOne({ githubId: token.sub })
-        session.user.id = user?._id.toString()
+        if (user) session.user.id = user._id.toString()
       } catch (error) {}
       return session
     },
-    async jwt({ token, account }: any) {
+    async jwt({ token, account }) {
       if (account) token.sub = account.providerAccountId
       return token
     },
   },
-  session: { strategy: 'jwt' as const },
+  session: { strategy: 'jwt' },
   secret: process.env.NEXTAUTH_SECRET,
 }

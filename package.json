@@ -2,12 +2,15 @@
   "name": "my-project",
   "version": "0.1.0",
   "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint ."
-  },
+
+"scripts": {
+  "preinstall": "npm config set legacy-peer-deps true",
+  "dev": "next dev",
+  "build": "next build",
+  "start": "next start",
+  "lint": "next lint",
+  "postinstall": "npm config set legacy-peer-deps false"
+},
   "dependencies": {
     "@auth/core": "^0.41.0",
     "@auth/mongodb-adapter": "^3.11.1",

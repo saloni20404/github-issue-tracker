@@ -1,20 +1,27 @@
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-import { auth } from "@/auth";
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { decode } from '@auth/core/jwt';
 import { connectToDatabase } from '@/lib/mongodb';
 import Issue from '@/lib/models/Issue';
 import User from '@/lib/models/User';
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await auth.apply(null, [request] as any);
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
+async function getUser() {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get('__Secure-authjs.session-token')?.value ||
+                       cookieStore.get('authjs.session-token')?.value;
+  if (!sessionToken) return null;
+  const token = await decode({ token: sessionToken, secret: process.env.AUTH_SECRET!, salt: '__Secure-authjs.session-token' });
+  if (!token?.email) return null;
   await connectToDatabase();
-  const user = await User.findOne({ email: session.user.email });
-  if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
+  return User.findOne({ email: token.email });
+}
 
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const user = await getUser();
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const { id } = await params;
   const issue = await Issue.findOne({ _id: id, userId: user._id.toString() });
   if (!issue) return NextResponse.json({ error: 'Not found' }, { status: 404 });
@@ -22,13 +29,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 }
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-  await connectToDatabase();
-  const user = await User.findOne({ email: session.user.email });
-  if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
-
+  const user = await getUser();
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const { id } = await params;
   const updates = await request.json();
   const allowed = ['title', 'body', 'state', 'priority', 'labels', 'assignee'];
@@ -36,24 +38,16 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   for (const key of allowed) {
     if (updates[key] !== undefined) filtered[key] = updates[key];
   }
-
   const issue = await Issue.findOneAndUpdate(
-    { _id: id, userId: user._id.toString() },
-    filtered,
-    { new: true }
+    { _id: id, userId: user._id.toString() }, filtered, { new: true }
   );
   if (!issue) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   return NextResponse.json(issue);
 }
 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-  await connectToDatabase();
-  const user = await User.findOne({ email: session.user.email });
-  if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
-
+  const user = await getUser();
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const { id } = await params;
   const issue = await Issue.findOneAndDelete({ _id: id, userId: user._id.toString() });
   if (!issue) return NextResponse.json({ error: 'Not found' }, { status: 404 });

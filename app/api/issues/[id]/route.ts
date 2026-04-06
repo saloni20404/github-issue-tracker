@@ -1,14 +1,16 @@
+import { auth } from "@/auth";
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+
 import { connectToDatabase } from '@/lib/mongodb';
 import Issue from '@/lib/models/Issue';
 import User from '@/lib/models/User';
 
 async function getUser(req: NextRequest) {
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-  if (!token?.sub) return null;
+  const session = await auth();
+    if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const user = await User.findOne({ githubId: session.user.id });
   await connectToDatabase();
-  return User.findOne({ githubId: token.sub });
+  
 }
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {

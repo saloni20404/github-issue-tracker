@@ -5,9 +5,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   trustHost: true,
   providers: [
     GitHub({
-      clientId: process.env.GITHUB_CLIENT_ID!,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+      clientId: 'Ov23liaokpoMJZZGG7Fi',
+      clientSecret: '4709e41b1ebcb10869d3db4ea1b07ec41afa0744',
     }),
   ],
-  secret: process.env.AUTH_SECRET,
+  secret: 'github-issue-tracker-secret-123456',
 })

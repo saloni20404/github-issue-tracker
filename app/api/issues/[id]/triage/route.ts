@@ -1,5 +1,6 @@
+import { auth } from "@/auth";
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+
 import { connectToDatabase } from '@/lib/mongodb';
 import Issue from '@/lib/models/Issue';
 import User from '@/lib/models/User';
@@ -8,11 +9,12 @@ import Groq from 'groq-sdk';
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-  if (!token?.sub) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const session = await auth();
+  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const user = await User.findOne({ githubId: session.user.id });
 
   await connectToDatabase();
-  const user = await User.findOne({ githubId: token.sub });
+  
   if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
   const { id } = await params;

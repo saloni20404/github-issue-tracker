@@ -13,7 +13,7 @@ export function LandingHero() {
           Manage GitHub issues with AI-powered triage, kanban boards, and collaborative workflows. Built for developers, by developers.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <a href="/api/auth/signin/github">
+          <a href="/api/auth/signin?callbackUrl=/dashboard">
             <Button size="lg" className="w-full sm:w-auto">
               Sign in with GitHub
             </Button>

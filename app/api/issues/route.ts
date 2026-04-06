@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+import { auth } from '@/auth';
 import { connectToDatabase } from '@/lib/mongodb';
 import Issue from '@/lib/models/Issue';
 import User from '@/lib/models/User';
@@ -8,11 +8,11 @@ import Groq from 'groq-sdk';
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 export async function GET(request: NextRequest) {
-  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-  if (!token?.sub) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const session = await auth();
+  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   await connectToDatabase();
-  const user = await User.findOne({ githubId: token.sub });
+  const user = await User.findOne({ githubId: session.user.id });
   if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
   const { searchParams } = new URL(request.url);
@@ -35,11 +35,11 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-  if (!token?.sub) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const session = await auth();
+  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   await connectToDatabase();
-  const user = await User.findOne({ githubId: token.sub });
+  const user = await User.findOne({ githubId: session.user.id });
   if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
   const body = await request.json();

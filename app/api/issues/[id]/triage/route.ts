@@ -13,7 +13,7 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
+  const session = await auth.apply(null, [request] as any);
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   await connectToDatabase();

@@ -12,7 +12,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ owner: string; repo: string }> }
 ) {
-  const session = await auth();
+  const session = await auth.apply(null, [request] as any);
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const user = await User.findOne({ githubId: session.user.id });
   const { owner, repo } = await params;

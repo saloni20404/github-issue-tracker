@@ -1,7 +1,7 @@
-import { auth } from "@/auth";
-
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
+
+import { auth } from "@/auth";
 import { NextRequest, NextResponse } from 'next/server';
 
 import { Octokit } from '@octokit/rest';

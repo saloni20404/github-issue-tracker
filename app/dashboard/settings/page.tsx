@@ -24,7 +24,11 @@ interface SyncResult {
 }
 
 export default function SettingsPage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  if (status === 'unauthenticated') {
+  window.location.href = '/';
+  return null;
+}
   const [repos, setRepos] = useState<Repo[]>([]);
   const [loadingRepos, setLoadingRepos] = useState(false);
   const [syncing, setSyncing] = useState<string | null>(null);
@@ -34,7 +38,9 @@ export default function SettingsPage() {
   async function loadRepos() {
     setLoadingRepos(true);
     try {
-      const res = await fetch('/api/github/repos');
+      const res = await fetch('/api/github/repos', {
+        credentials: 'include',
+      });
       const data = await res.json();
       setRepos(Array.isArray(data) ? data.slice(0, 20) : []);
       setReposLoaded(true);
@@ -49,7 +55,9 @@ export default function SettingsPage() {
     const key = `${owner}/${repo}`;
     setSyncing(key);
     try {
-      const res = await fetch(`/api/github/repos/${owner}/${repo}/issues`);
+      const res = await fetch(`/api/github/repos/${owner}/${repo}/issues`, {
+        credentials: 'include',
+      });
       const data = await res.json();
       setSyncResults(prev => ({
         ...prev,

@@ -1,3 +1,5 @@
+export const runtime = 'nodejs'
+
 import NextAuth from 'next-auth'
 import GitHub from 'next-auth/providers/github'
 import { connectToDatabase } from '@/lib/mongodb'
@@ -5,6 +7,17 @@ import User from '@/lib/models/User'
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   trustHost: true,
+  cookies: {
+    sessionToken: {
+      name: `__Secure-authjs.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: true,
+      },
+    },
+  },
   providers: [
     GitHub({
       clientId: process.env.GITHUB_CLIENT_ID!,
@@ -31,7 +44,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
         return true
       } catch (error) {
-        console.error('SignIn error:', error)
         return true
       }
     },

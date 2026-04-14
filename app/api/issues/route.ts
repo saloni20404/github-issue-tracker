@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
 
   const issue = await Issue.create({
     title, body: description, repoName, repoOwner,
-    githubIssueId: githubIssueId || 0,
+    githubIssueId: githubIssueId || Math.floor(Math.random() * 1000000),
     state: 'open',
     priority: triageResult.priority,
     labels: triageResult.labels,
